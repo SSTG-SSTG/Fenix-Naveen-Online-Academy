@@ -1,0 +1,21 @@
+<!DOCTYPE html><html lang="ta"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>கேள்விகள் | Fenix Naveen</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Thambi+2:wght@700;800&family=Noto+Sans+Tamil:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}body{font-family:'Noto Sans Tamil',system-ui,sans-serif;background:#F6FAFF;color:#13243F;margin:0;line-height:1.7}
+main{max-width:760px;margin:0 auto;padding:24px 20px 60px}h1{font-family:'Baloo Thambi 2',sans-serif;font-size:2rem;margin:8px 0}a{color:#2563EB}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}.chip{font:inherit;padding:6px 16px;border-radius:999px;border:2px solid #DCE6F5;background:#fff;cursor:pointer}.chip[aria-pressed=true]{background:#2563EB;border-color:#2563EB;color:#fff}
+.q{background:#fff;border:1px solid #DCE6F5;border-radius:16px;padding:18px;margin-bottom:14px}.q small{color:#5B6B85}.q p{font-weight:600;margin:4px 0 10px}
+.opt{display:block;width:100%;text-align:left;font:inherit;padding:8px 14px;margin-bottom:6px;border-radius:12px;border:2px solid #DCE6F5;background:#F6FAFF;cursor:pointer}
+.opt.right{border-color:#15803D;background:#E8F7ED}.opt.wrong{border-color:#B91C1C;background:#FDECEC}:focus-visible{outline:3px solid #2563EB;outline-offset:2px}
+</style></head><body><main>
+<a href="index.html">&larr; முகப்பு</a><h1>பயிற்சி கேள்விகள்</h1>
+<div class="chips" id="chips"></div><div id="list" aria-live="polite"></div>
+<script>
+let all=[],cur='அனைத்தும்';const $=id=>document.getElementById(id);
+function draw(){const l=$('list');l.textContent='';const f=all.filter(q=>cur==='அனைத்தும்'||q.exam===cur);
+ if(!f.length){l.textContent='இந்தப் பிரிவில் கேள்விகள் இல்லை.';return}
+ f.forEach(q=>{const c=document.createElement('div');c.className='q';const s=document.createElement('small');s.textContent=q.exam;const p=document.createElement('p');p.textContent=q.text;c.append(s,p);
+  q.options.forEach((t,i)=>{const b=document.createElement('button');b.className='opt';b.textContent=t;b.onclick=()=>{c.querySelectorAll('.opt').forEach((x,j)=>{x.disabled=true;if(j===q.answer)x.classList.add('right')});if(i!==q.answer)b.classList.add('wrong')};c.append(b)});l.append(c)})}
+fetch('api.php?r=questions').then(r=>r.json()).then(d=>{all=d;const ex=['அனைத்தும்',...new Set(d.map(q=>q.exam))];
+ ex.forEach(e=>{const b=document.createElement('button');b.className='chip';b.textContent=e;b.setAttribute('aria-pressed',e===cur);b.onclick=()=>{cur=e;document.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',x===b));draw()};$('chips').append(b)});draw()});
+</script></main></body></html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html><html lang="ta"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Console | Fenix Naveen</title>
+<style>
+*{box-sizing:border-box}body{font-family:system-ui,'Noto Sans Tamil',sans-serif;background:#F6FAFF;color:#13243F;margin:0;line-height:1.6}
+main{max-width:760px;margin:0 auto;padding:24px 20px 60px}h1{font-size:1.5rem;margin:0}h2{font-size:1.15rem;margin-top:32px}a{color:#2563EB;font-weight:600}
+.card{background:#fff;border:1px solid #DCE6F5;border-radius:16px;padding:20px;margin-top:16px}
+label{display:block;font-weight:600;margin:12px 0 4px}input,select,textarea{width:100%;font:inherit;padding:10px;border:2px solid #DCE6F5;border-radius:10px;background:#F6FAFF}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:560px){.two{grid-template-columns:1fr}}
+button{font:inherit;font-weight:700;padding:10px 22px;border:0;border-radius:999px;background:#2563EB;color:#fff;cursor:pointer;margin:16px 8px 0 0}
+button.del{background:#B91C1C;margin:0;padding:6px 14px;font-size:.85rem}button.ed{background:#13243F;margin:0 6px 0 0;padding:6px 14px;font-size:.85rem}button.out{background:transparent;color:#2563EB;border:2px solid #2563EB;margin:0}
+:focus-visible{outline:3px solid #2563EB;outline-offset:2px}.msg{margin-top:10px;font-weight:600}.err{color:#B91C1C}.ok{color:#15803D}small{color:#5B6B85;display:block}.hint{font-weight:400;color:#5B6B85;font-size:.85rem}
+.row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;border-top:1px solid #DCE6F5;padding:12px 0}.row:first-child{border:0}.acts{display:flex;flex-shrink:0}
+</style></head><body><main>
+<h1>Store Console</h1>
+<div id="login" class="card" hidden><label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password"><button id="loginBtn">Login</button><p class="msg err" id="lmsg"></p></div>
+<div id="panel" hidden>
+ <div style="margin-top:12px"><button class="out" id="logout">Logout</button> &nbsp; <a href="admin.html">கேள்விகள் Admin</a> &nbsp; <a href="store.html">Store பார்க்க</a></div>
+ <h2 id="ftitle">புதிய Item சேர்க்க</h2>
+ <div class="card">
+  <div class="two"><div><label for="type">Type</label><select id="type"><option value="course">Course (வகுப்பு)</option><option value="book">Online Book (புத்தகம்)</option></select></div>
+  <div><label for="access">Free / Paid</label><select id="access"><option value="free">Free (இலவசம்)</option><option value="paid">Paid (கட்டணம்)</option></select></div></div>
+  <div class="two"><div><label for="exam">Exam</label><select id="exam"></select></div>
+  <div id="priceBox" hidden><label for="price">Price (₹)</label><input id="price" type="number" min="1" max="100000"></div></div>
+  <label for="title">Title</label><input id="title" maxlength="120">
+  <label for="desc">Description</label><textarea id="desc" rows="3" maxlength="600"></textarea>
+  <label for="link">Link <span class="hint" id="lhint"></span></label><input id="link" type="url" placeholder="https://...">
+  <label for="image">Image link (optional)</label><input id="image" type="url" placeholder="https://...jpg">
+  <button id="save">Save</button><button class="out" id="cancel" hidden>Cancel edit</button><p class="msg" id="smsg"></p></div>
+ <h2>உள்ள Items (<span id="count">0</span>)</h2><div class="card" id="list"></div>
+</div></main>
+<script>
+const $=id=>document.getElementById(id);let items=[],editing=0;
+const api=(u,m='GET',b)=>fetch(u,{method:m,headers:{'Content-Type':'application/json'},body:b?JSON.stringify(b):undefined}).then(async r=>{const d=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(d.error||'Error'),{status:r.status});return d});
+function sync(){const p=$('access').value==='paid';$('priceBox').hidden=!p;$('lhint').textContent=p?'(வாங்கும் link: Razorpay / Google Form / WhatsApp. காலியாக விட்டால் WhatsApp செல்லும்)':'(இலவச content link: YouTube / PDF / Drive. கட்டாயம்)'}
+$('access').onchange=sync;
+function reset(){editing=0;['title','desc','link','image','price'].forEach(k=>$(k).value='');$('access').value='free';$('type').value='course';$('ftitle').textContent='புதிய Item சேர்க்க';$('save').textContent='Save';$('cancel').hidden=true;sync()}
+async function init(){try{const m=await api('api.php?r=me');$('exam').innerHTML=[...m.exams,'General'].map(e=>`<option>${e}</option>`).join('');$('login').hidden=true;$('panel').hidden=false;sync();refresh()}catch{$('login').hidden=false;$('panel').hidden=true}}
+async function refresh(){items=await api('api.php?r=store');$('count').textContent=items.length;const box=$('list');box.textContent='';
+ if(!items.length)box.textContent='இன்னும் எதுவும் சேர்க்கவில்லை.';
+ items.slice().reverse().forEach(q=>{const r=document.createElement('div');r.className='row';const d=document.createElement('div');
+  const s=document.createElement('small');s.textContent=(q.type==='course'?'Course':'Book')+' · '+(q.access==='free'?'Free':'₹'+q.price)+' · '+q.exam;const t=document.createElement('div');t.textContent=q.title;d.append(s,t);
+  const a=document.createElement('div');a.className='acts';const e=document.createElement('button');e.className='ed';e.textContent='Edit';e.onclick=()=>edit(q);
+  const x=document.createElement('button');x.className='del';x.textContent='Delete';x.onclick=async()=>{if(confirm('இதை நீக்கவா?')){await api('api.php?r=item_delete&id='+q.id,'POST');if(editing===q.id)reset();refresh()}};a.append(e,x);r.append(d,a);box.append(r)})}
+function edit(q){editing=q.id;$('type').value=q.type;$('access').value=q.access;$('exam').value=q.exam;$('title').value=q.title;$('desc').value=q.desc;$('link').value=q.link;$('image').value=q.image;$('price').value=q.price||'';
+ $('ftitle').textContent='Item திருத்த';$('save').textContent='Update';$('cancel').hidden=false;sync();scrollTo({top:0,behavior:'smooth'})}
+$('cancel').onclick=reset;
+$('save').onclick=async()=>{const m=$('smsg');try{await api('api.php?r=item_save','POST',{id:editing,type:$('type').value,access:$('access').value,exam:$('exam').value,title:$('title').value,desc:$('desc').value,link:$('link').value,image:$('image').value,price:$('price').value});
+ m.className='msg ok';m.textContent='சேமிக்கப்பட்டது.';reset();refresh()}catch(e){if(e.status===401)return init();m.className='msg err';m.textContent=e.message}};
+$('loginBtn').onclick=async()=>{try{await api('api.php?r=login','POST',{password:$('pw').value});$('pw').value='';$('lmsg').textContent='';init()}catch(e){$('lmsg').textContent=e.message}};
+$('pw').onkeydown=e=>{if(e.key==='Enter')$('loginBtn').click()};
+$('logout').onclick=async()=>{await api('api.php?r=logout','POST');init()};
+init();
+</script></body></html>

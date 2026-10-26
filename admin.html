@@ -1,0 +1,39 @@
+<!DOCTYPE html><html lang="ta"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Admin | Fenix Naveen</title>
+<style>
+*{box-sizing:border-box}body{font-family:system-ui,'Noto Sans Tamil',sans-serif;background:#F6FAFF;color:#13243F;margin:0;line-height:1.6}
+main{max-width:760px;margin:0 auto;padding:24px 20px 60px}h1{font-size:1.5rem}h2{font-size:1.15rem;margin-top:32px}
+.card{background:#fff;border:1px solid #DCE6F5;border-radius:16px;padding:20px;margin-top:16px}
+label{display:block;font-weight:600;margin:12px 0 4px}input,select,textarea{width:100%;font:inherit;padding:10px;border:2px solid #DCE6F5;border-radius:10px;background:#F6FAFF}
+.opt{display:flex;gap:10px;align-items:center;margin-top:8px}.opt input[type=radio]{width:auto}
+button{font:inherit;font-weight:700;padding:10px 22px;border:0;border-radius:999px;background:#2563EB;color:#fff;cursor:pointer;margin-top:16px}
+button.del{background:#B91C1C;margin:0;padding:6px 14px;font-size:.85rem}button.out{background:transparent;color:#2563EB;border:2px solid #2563EB}
+:focus-visible{outline:3px solid #2563EB;outline-offset:2px}.msg{margin-top:10px;font-weight:600}.err{color:#B91C1C}.ok{color:#15803D}
+.row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;border-top:1px solid #DCE6F5;padding:12px 0}.row:first-child{border:0}.row small{color:#5B6B85}
+</style></head><body><main>
+<h1>Fenix Naveen Admin</h1>
+<div id="login" class="card" hidden><label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password"><button id="loginBtn">Login</button><p class="msg err" id="lmsg"></p></div>
+<div id="panel" hidden>
+ <button class="out" id="logout">Logout</button> &nbsp; <a href="console.html" style="color:#2563EB;font-weight:600">Store Console</a>
+ <h2>புதிய கேள்வி சேர்க்க</h2>
+ <div class="card"><label for="exam">Exam</label><select id="exam"></select>
+ <label for="text">கேள்வி</label><textarea id="text" rows="3" maxlength="500"></textarea>
+ <label>விருப்பங்கள் (சரியான விடையைத் தேர்ந்தெடுங்கள்)</label><div id="opts"></div>
+ <button id="add">Save question</button><p class="msg" id="amsg"></p></div>
+ <h2>உள்ள கேள்விகள் (<span id="count">0</span>)</h2><div class="card" id="list"></div>
+</div></main>
+<script>
+const $=id=>document.getElementById(id);
+const api=(u,m='GET',b)=>fetch(u,{method:m,headers:{'Content-Type':'application/json'},body:b?JSON.stringify(b):undefined}).then(async r=>{const d=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(d.error||'Error'),{status:r.status});return d});
+for(let i=0;i<4;i++)$('opts').insertAdjacentHTML('beforeend',`<div class="opt"><input type="radio" name="ans" value="${i}" aria-label="Correct answer ${i+1}" ${i?'':'checked'}><input class="o" maxlength="200" placeholder="Option ${i+1}"></div>`);
+async function init(){try{const m=await api('api.php?r=me');$('exam').innerHTML=m.exams.map(e=>`<option>${e}</option>`).join('');$('login').hidden=true;$('panel').hidden=false;refresh()}catch{$('login').hidden=false;$('panel').hidden=true}}
+async function refresh(){const l=await api('api.php?r=questions');$('count').textContent=l.length;const box=$('list');box.textContent='';
+ l.slice().reverse().forEach(q=>{const r=document.createElement('div');r.className='row';const d=document.createElement('div');
+  const s=document.createElement('small');s.textContent=q.exam;const t=document.createElement('div');t.textContent=q.text;const a=document.createElement('small');a.textContent='விடை: '+q.options[q.answer];
+  d.append(s,t,a);const b=document.createElement('button');b.className='del';b.textContent='Delete';b.onclick=async()=>{if(confirm('இந்தக் கேள்வியை நீக்கவா?')){await api('api.php?r=delete&id='+q.id,'POST');refresh()}};r.append(d,b);box.append(r)})}
+$('loginBtn').onclick=async()=>{try{await api('api.php?r=login','POST',{password:$('pw').value});$('pw').value='';$('lmsg').textContent='';init()}catch(e){$('lmsg').textContent=e.message}};
+$('pw').onkeydown=e=>{if(e.key==='Enter')$('loginBtn').click()};
+$('logout').onclick=async()=>{await api('api.php?r=logout','POST');init()};
+$('add').onclick=async()=>{const m=$('amsg');try{await api('api.php?r=add','POST',{exam:$('exam').value,text:$('text').value,options:[...document.querySelectorAll('.o')].map(x=>x.value),answer:document.querySelector('[name=ans]:checked').value});
+ m.className='msg ok';m.textContent='சேமிக்கப்பட்டது.';$('text').value='';document.querySelectorAll('.o').forEach(x=>x.value='');refresh()}catch(e){if(e.status===401)return init();m.className='msg err';m.textContent=e.message}};
+init();
+</script></body></html>

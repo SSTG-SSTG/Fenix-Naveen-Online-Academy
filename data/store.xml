@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<items>
+  <item id="1" type="book" access="paid" price="499" exam="TNPSC Group 4">
+    <title>Indian Polity Book</title>
+    <desc>we included indian polity in this book.</desc>
+    <link/>
+    <image/>
+  </item>
+</items>
