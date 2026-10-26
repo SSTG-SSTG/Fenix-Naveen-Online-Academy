@@ -1,3 +1,7 @@
+# Fenix-Naveen-Online-Academy
+Fenix Naveen Online Academy provides accessible online education and competitive exam preparation, helping students strengthen their knowledge, practice effectively, and prepare confidently for TNPSC and Tamil Nadu government examinations.
+
+
 Fenix Naveen site (PHP + XML)
 1. Open config.php, set ADMIN_PASSWORD and SESSION_SECRET (both required).
 2. Upload ALL files to htdocs (keep the data folder and its .htaccess).
